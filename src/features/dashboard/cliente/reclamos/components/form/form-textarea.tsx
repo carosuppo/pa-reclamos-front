@@ -8,9 +8,10 @@ interface FormTextareaProps {
   placeholder?: string
   required?: boolean
   rows?: number
+  disabled?: boolean;
 }
 
-export function FormTextarea({ label, id, value, onChange, placeholder, required, rows = 4 }: FormTextareaProps) {
+export function FormTextarea({ label, id, value, onChange, placeholder, required, rows = 4, disabled }: FormTextareaProps) {
   return (
     <div className="space-y-2">
       <label htmlFor={id} className="block text-sm font-medium text-foreground">
@@ -24,6 +25,7 @@ export function FormTextarea({ label, id, value, onChange, placeholder, required
         placeholder={placeholder}
         required={required}
         rows={rows}
+        disabled={disabled}
         className="w-full px-4 py-3 bg-input text-foreground placeholder-muted-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none"
       />
     </div>

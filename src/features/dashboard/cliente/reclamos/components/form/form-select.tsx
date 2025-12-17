@@ -12,9 +12,10 @@ interface FormSelectProps {
   onChange: (value: string) => void
   options: readonly SelectOption[]
   required?: boolean
+  disabled?: boolean;
 }
 
-export function FormSelect({ label, id, value, onChange, options, required }: FormSelectProps) {
+export function FormSelect({ label, id, value, onChange, options, required, disabled }: FormSelectProps) {
   return (
     <div className="space-y-2">
       <label htmlFor={id} className="block text-sm font-medium text-foreground">
@@ -26,6 +27,7 @@ export function FormSelect({ label, id, value, onChange, options, required }: Fo
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
+        disabled={disabled}
         className="w-full px-4 py-3 bg-input text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all appearance-none cursor-pointer"
       >
         <option value="">Seleccionar...</option>

@@ -41,12 +41,12 @@ export const NAVIGATION_ITEMS_BY_ROLE: Record<UserRole, NavigationItem[]> = {
   empleado: [
     {
       label: "Reclamos de mi Área",
-      href: "/reclamos-area",
+      href: "/empleado/reclamos-area",
       icon: "list",
     },
     {
       label: "Reportes",
-      href: "/reportes",
+      href: "/empleado/reportes",
       icon: "barChart",
     },
   ],

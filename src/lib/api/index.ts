@@ -205,6 +205,7 @@ export const api = {
         fechaDesde?: string
         fechaFin?: string
         clienteId?: string
+        areaId?: string
       },
       token: string,
     ) => {
@@ -213,6 +214,7 @@ export const api = {
       if (params.fechaDesde) queryParams.append("fechaDesde", params.fechaDesde)
       if (params.fechaFin) queryParams.append("fechaFin", params.fechaFin)
       if (params.clienteId) queryParams.append("clienteId", params.clienteId)
+      if (params.areaId) queryParams.append("areaId", params.areaId)
 
       return request(`/reclamo/filtros?${queryParams.toString()}`, {
         method: "GET",
@@ -264,6 +266,12 @@ export const api = {
         body: data,
         token,
       }),
+
+      reclamosDelArea: (token: string) =>
+      request(`/reclamo/area`, {
+        method: "GET",
+        token,
+      })
   },
 
   // ------------------------------------------
