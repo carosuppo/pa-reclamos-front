@@ -21,6 +21,22 @@ interface AuthState {
   setHasHydrated: (state: boolean) => void
 }
 
+// Helper para sincronizar el token con cookies
+function syncTokenWithCookie(token: string | null) {
+  if (typeof window === "undefined") return
+
+  if (token) {
+    // Guardar el token en una cookie
+    // Nota: esta cookie NO es HttpOnly para que pueda ser leída por el middleware
+    // eslint-disable-next-line
+    document.cookie = `access_token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+  } else {
+    // Eliminar la cookie
+    // eslint-disable-next-line
+    document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+  }
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -30,6 +46,9 @@ export const useAuthStore = create<AuthState>()(
       setAuth: (auth) => {
         set({ auth })
         if (auth?.access_token) {
+          // Sincronizar con cookie para que el middleware pueda acceder
+          syncTokenWithCookie(auth.access_token)
+
           const decoded = decodeJWT(auth.access_token)
           if (decoded) {
             const user: User = {
@@ -41,10 +60,16 @@ export const useAuthStore = create<AuthState>()(
             set({ user })
           }
         } else {
+          // Limpiar cookie
+          syncTokenWithCookie(null)
           set({ user: null })
         }
       },
-      clearAuth: () => set({ auth: null, user: null }),
+      clearAuth: () => {
+        // Limpiar cookie al hacer logout
+        syncTokenWithCookie(null)
+        set({ auth: null, user: null })
+      },
       setHasHydrated: (state) => set({ _hasHydrated: state }),
     }),
     {
@@ -64,11 +89,14 @@ export const useAuthStore = create<AuthState>()(
         // When rehydrating from localStorage, check if token is expired
         if (state?.auth?.access_token) {
           if (isTokenExpired(state.auth.access_token)) {
-            // Token is expired, clear the state
+            // Token is expired, clear the state and cookie
             state.auth = null
             state.user = null
+            syncTokenWithCookie(null)
           } else {
-            // Token is valid, ensure user info is decoded
+            // Token is valid, ensure user info is decoded and sync with cookie
+            syncTokenWithCookie(state.auth.access_token)
+
             const decoded = decodeJWT(state.auth.access_token)
             if (decoded && !state.user) {
               state.user = {
