@@ -1,3 +1,4 @@
+"use client"
 /**
  * API Client Global (versión rápida basada en OpenAPI)
  *
@@ -8,14 +9,14 @@
  * pero para el deadline esta capa única es suficiente y limpia.
  */
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
+const BASE_URL = "http://localhost:3001"
 
 if (!BASE_URL) {
   // En desarrollo es útil ver esto si la env var no está configurada.
   // No tiramos error aquí para no romper el build en caso de SSR.
   // eslint-disable-next-line no-console
   console.warn(
-    "[api] NEXT_PUBLIC_BACKEND_UR no está definida. Configura la URL del backend en tu .env.local",
+    "[api] NEXT_PUBLIC_BACKEND_URL no está definida. Configura la URL del backend en tu .env.local",
   )
 }
 
@@ -31,12 +32,18 @@ async function request<TResponse = unknown>(
 ): Promise<TResponse> {
   const url = `${BASE_URL ?? ""}${path}`
 
+  const finalToken =
+    token ??
+    (typeof window !== "undefined"
+      ? localStorage.getItem("access_token") ?? undefined
+      : undefined)
+
   const headers: HeadersInit = {
     "Content-Type": "application/json",
   }
 
-  if (token) {
-    headers.Authorization = `Bearer ${token}`
+  if (finalToken) {
+    headers.Authorization = `Bearer ${finalToken}`
   }
 
   const res = await fetch(url, {
@@ -45,33 +52,13 @@ async function request<TResponse = unknown>(
     body: body != null ? JSON.stringify(body) : undefined,
   })
 
-  if (!res.ok) {
-    // Intentamos obtener mensaje de error amigable, pero sin depender del formato exacto del backend
-    let message = `Error ${res.status} al llamar ${method} ${path}`
-    try {
-      const data = (await res.json()) as unknown
-      if (data && typeof data === "object" && "message" in data) {
-        const { message: msg } = data as { message?: unknown }
-        if (typeof msg === "string") {
-          message = msg
-        } else if (Array.isArray(msg)) {
-          message = msg.map((m) => String(m)).join(", ")
-        }
-      }
-    } catch {
-      // Ignoramos errores de parseo
-    }
-    throw new Error(message)
-  }
-
-  // Algunos endpoints pueden no devolver cuerpo (por ejemplo DELETE)
-  try {
-    return (await res.json()) as TResponse
-  } catch {
-    // Si no hay JSON, devolvemos null para que el caller lo tenga en cuenta
-    return null as TResponse
+  if (res.ok) {
+    return res.json()
+  } else {
+    throw new Error(`HTTP error! status: ${res.status}`)
   }
 }
+
 
 // ============================================
 // API GLOBAL - agrupado por funcionalidad
@@ -199,6 +186,46 @@ export const api = {
         token,
       }),
 
+    listarPorArea: (token: string) =>
+      request("/reclamo/area", {
+        method: "GET",
+        token,
+      }),
+    
+    updateEstado(id: string, data: any, token: string) {
+      return fetch(`${BASE_URL}/reclamo/update-estado/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      }).then(r => r.json())
+      },
+
+    reassignArea(id: string, data: any, token: string) {
+      return fetch(`${BASE_URL}/reclamo/reassign-area/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      }).then(r => r.json())
+    },
+
+    obtenerPorId(id: string, token: string) {
+      return fetch(`${BASE_URL}/reclamo/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }).then(r => r.json())
+    },
+
+    },
+
     filtros: (
       params: {
         estado?: string
@@ -266,13 +293,6 @@ export const api = {
         body: data,
         token,
       }),
-
-      reclamosDelArea: (token: string) =>
-      request(`/reclamo/area`, {
-        method: "GET",
-        token,
-      })
-  },
 
   // ------------------------------------------
   // TIPO RECLAMO

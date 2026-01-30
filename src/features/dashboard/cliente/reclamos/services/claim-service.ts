@@ -15,6 +15,8 @@ function transformApiClaim(apiClaim: any): Claim {
     createdAt: new Date(apiClaim.createdAt || Date.now()),
     updatedAt: new Date(apiClaim.updatedAt || Date.now()),
     userId: apiClaim.proyecto?.clienteId || "",
+    projectName: apiClaim.proyectoNombre, 
+    clientName: apiClaim.clienteNombre,
   }
 }
 
@@ -84,4 +86,39 @@ export const claimService = {
       throw error
     }
   },
+
+  async getClaimsByArea(token: string): Promise<Claim[]> {
+    try {
+      const response = await api.reclamos.listarPorArea(token); 
+      
+      if (Array.isArray(response)) {
+        return response.map(transformApiClaim);
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching area claims:', error);
+      return [];
+    }
+  },
+
+  async updateEstado(
+    reclamoId: string,
+    payload: { estado: string; descripcion: string },
+    token: string,
+  ) {
+    return api.reclamos.updateEstado(reclamoId, payload, token)
+  },
+
+  async reassignArea(
+    reclamoId: string,
+    payload: { areaId: string; descripcion: string },
+    token: string,
+  ) {
+    return api.reclamos.reassignArea(reclamoId, payload, token)
+  },
+
+  async getClaimById(id: string, token: string): Promise<Claim> {
+    const response = await api.reclamos.obtenerPorId(id, token)
+    return transformApiClaim(response)
+  }
 }

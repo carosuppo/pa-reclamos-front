@@ -119,7 +119,7 @@ export function Sidebar() {
   const roleKey = user?.role as keyof typeof NAVIGATION_ITEMS_BY_ROLE
   const navigationItems = user?.role && NAVIGATION_ITEMS_BY_ROLE[roleKey] && NAVIGATION_ITEMS_BY_ROLE[roleKey].length > 0
     ? NAVIGATION_ITEMS_BY_ROLE[roleKey]
-    : NAVIGATION_ITEMS_BY_ROLE.cliente
+    : []
 
   return (
     <aside className="w-64 bg-card h-screen flex flex-col">

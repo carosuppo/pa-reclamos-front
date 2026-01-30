@@ -12,7 +12,7 @@ interface FormSelectProps {
   onChange: (value: string) => void
   options: readonly SelectOption[]
   required?: boolean
-  disabled?: boolean;
+  disabled?: boolean
 }
 
 export function FormSelect({ label, id, value, onChange, options, required, disabled }: FormSelectProps) {

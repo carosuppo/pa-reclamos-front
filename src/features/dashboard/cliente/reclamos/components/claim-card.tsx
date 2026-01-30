@@ -4,7 +4,8 @@ import { STATUS_LABELS } from "../constants/claim-options"
 import { formatDate } from "@/helpers/format"
 
 interface ClaimCardProps {
-  claim: Claim
+  claim: Claim;
+  showClient?: boolean;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -20,7 +21,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   BAJA: "bg-green-500/20 text-green-400",
 }
 
-export function ClaimCard({ claim }: ClaimCardProps) {
+export function ClaimCard({ claim, showClient = true }: ClaimCardProps) {
   return (
     <div className="bg-card rounded-xl p-6 space-y-4">
       <div className="flex items-start justify-between gap-4">
@@ -33,6 +34,15 @@ export function ClaimCard({ claim }: ClaimCardProps) {
         </span>
       </div>
 
+      <p className="text-xs text-muted-foreground">
+        Proyecto: {claim.projectName}
+      </p>
+      {showClient && (
+        <p className="text-xs text-muted-foreground">
+          Cliente: {claim.clientName}
+        </p>
+      )}
+
       <p className="text-muted-foreground text-sm line-clamp-2">{claim.description}</p>
 
       <div className="flex items-center justify-between gap-4">
@@ -43,7 +53,7 @@ export function ClaimCard({ claim }: ClaimCardProps) {
           <span className="text-xs text-muted-foreground">{formatDate(claim.createdAt)}</span>
         </div>
         <Link
-          href={`/cliente/reclamos/${claim.id}`}
+          href={`/reclamos/${claim.id}`}
           className="px-3 py-1.5 text-xs font-medium text-primary hover:text-primary/80 border border-primary/20 rounded hover:bg-primary/5 transition-colors"
         >
           Ver Detalles

@@ -23,8 +23,8 @@ export function useRegisterForm() {
         saveAuthToken(data.access_token)
         // Redirigir a la página principal después de registro exitoso
         router.push("/")
-      } catch {
-        // Error is handled by TanStack Query
+      } catch (err) {
+        console.error("ERROR REGISTER:", err)
       }
     }
   }

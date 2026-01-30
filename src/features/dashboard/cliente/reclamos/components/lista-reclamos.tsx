@@ -4,7 +4,8 @@ import { useClaims } from "../hooks/use-claims"
 import { ClaimCard } from "./claim-card"
 
 export function ListaReclamos() {
-  const { claims, isLoading, error, isCreating, createError } = useClaims()
+  const { claims, isLoading, error } = useClaims()
+
 
   if (isLoading) {
     return (
@@ -34,7 +35,10 @@ export function ListaReclamos() {
     <div className="space-y-4">
       <div className="grid gap-4">
         {claims.map((claim) => (
-          <ClaimCard key={claim.id} claim={claim} />
+          <ClaimCard key={claim.id}
+          claim={claim}
+          showClient={false}
+          />
         ))}
       </div>
     </div>
