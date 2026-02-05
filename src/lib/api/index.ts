@@ -1,22 +1,38 @@
 "use client"
+
+import { UpdateClaimPayload } from "@/features/dashboard/cliente/reclamos/hooks/use-actualizar-reclamo"
+
 /**
  * API Client Global (versión rápida basada en OpenAPI)
  *
  * Para el TP usamos un único cliente `api` que llama directamente a los
- * endpoints del backend usando la URL de `NEXT_PUBLIC_BACKEND_UR`.
+ * endpoints del backend usando la URL de `NEXT_PUBLIC_BACKEND_URL`.
  *
  * Más adelante, si hace falta, se puede refactorizar a servicios por feature,
  * pero para el deadline esta capa única es suficiente y limpia.
  */
 
-const BASE_URL = "http://localhost:3000"
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.trim()
+
+const FALLBACK_LOCAL_URLS = ["http://localhost:3001", "http://localhost:4000"]
+
+function getBaseUrlCandidates(): string[] {
+  if (typeof window === "undefined") {
+    return [BASE_URL ?? ""]
+  }
+
+  const candidates = [BASE_URL, ...FALLBACK_LOCAL_URLS]
+    .filter((value): value is string => Boolean(value))
+
+  return [...new Set(candidates)]
+}
 
 if (!BASE_URL) {
   // En desarrollo es útil ver esto si la env var no está configurada.
   // No tiramos error aquí para no romper el build en caso de SSR.
   // eslint-disable-next-line no-console
   console.warn(
-    "[api] NEXT_PUBLIC_BACKEND_URL no está definida. Configura la URL del backend en tu .env.local",
+    "[api] NEXT_PUBLIC_BACKEND_URL no está definida. Se intentará con localhost:3001 y localhost:4000 en desarrollo.",
   )
 }
 
@@ -30,27 +46,39 @@ async function request<TResponse = unknown>(
   path: string,
   { method = "GET", body, token }: RequestOptions = {},
 ): Promise<TResponse> {
-  const url = `${BASE_URL ?? ""}${path}`
-
-  const finalToken =
-    token ??
-    (typeof window !== "undefined"
-      ? localStorage.getItem("access_token") ?? undefined
-      : undefined)
+  const baseUrlCandidates = getBaseUrlCandidates()
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
   }
 
-  if (finalToken) {
-    headers.Authorization = `Bearer ${finalToken}`
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
   }
 
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: body != null ? JSON.stringify(body) : undefined,
-  })
+  let res: Response | null = null
+  let lastError: unknown = null
+
+  for (const baseUrl of baseUrlCandidates) {
+    const url = `${baseUrl}${path}`
+
+    try {
+      res = await fetch(url, {
+        method,
+        headers,
+        body: body != null ? JSON.stringify(body) : undefined,
+      })
+      break
+    } catch (error) {
+      lastError = error
+    }
+  }
+
+  if (!res) {
+    throw new Error(
+      `No se pudo conectar al backend. Revisá NEXT_PUBLIC_BACKEND_URL o levantá la API (${String(lastError)})`,
+    )
+  }
 
   if (res.ok) {
     return res.json()
@@ -264,18 +292,36 @@ export const api = {
       id: string,
       data: Record<string, unknown>,
       token: string,
-    ) => {
-      return fetch(`${BASE_URL}/reclamo/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      }).then(r => r.json())
-    },
-  },
+    ) =>
+      request(`/reclamo/update-estado/${id}`, {
+        method: "PUT",
+        body: data,
+        token,
+      }),
 
+    reasignarArea: (
+      id: string,
+      data: Record<string, unknown>,
+      token: string,
+    ) =>
+      request(`/reclamo/reassign-area/${id}`, {
+        method: "PUT",
+        body: data,
+        token,
+      }),
+
+    actualizar: (
+      id: string,
+      data: UpdateClaimPayload,
+      token: string,
+    ) =>
+      request(`/reclamo/${id}`, {
+        method: "PATCH",
+        body: data,
+        token,
+      }),
+
+  },
   // ------------------------------------------
   // TIPO RECLAMO
   // ------------------------------------------

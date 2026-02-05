@@ -1,211 +1,155 @@
 "use client"
 
-import { useState } from "react"
-import { useEffect } from "react"
+import type React from "react"
+import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
-import { Dialog } from "@mui/material"
-import { FormTextarea } from "./form/form-textarea"
-import { FormSelect } from "./form/form-select"
-import { useClaim } from "../hooks/use-claim"
+import { CRITICALITY_OPTIONS, PRIORITY_OPTIONS } from "../constants/claim-options"
 import { useActualizarReclamo } from "../hooks/use-actualizar-reclamo"
-import { useTipoReclamo } from "../hooks/use-tipo-reclamo"
 import { useAreas } from "../hooks/use-areas"
+import { useTipoReclamo } from "../hooks/use-tipo-reclamo"
+import { FormRadioGroup } from "./form/form-radio-group"
+import { FormSelect } from "./form/form-select"
+import { FormTextarea } from "./form/form-textarea"
 
-interface Props {
-  open: boolean
-  onClose: () => void
+interface ActualizarReclamoFormProps {
   reclamoId: string
+  initialValues: {
+    tipoReclamoId?: string
+    areaId?: string
+    descripcion: string
+    prioridad?: "ALTA" | "MEDIA" | "BAJA"
+    criticidad?: "ALTA" | "MEDIA" | "BAJA"
+  }
 }
 
-const MEDIDAS_OPTIONS = [
-  { label: "Alta", value: "ALTA" },
-  { label: "Media", value: "MEDIA" },
-  { label: "Baja", value: "BAJA" },
-]
-
 export function ActualizarReclamoForm({
-  open,
-  onClose,
   reclamoId,
-}: Props) {
-  const { data: reclamo } = useClaim(reclamoId)
-  const { mutateAsync: actualizarReclamo, isPending } =
+  initialValues,
+}: ActualizarReclamoFormProps) {
+  const [formData, setFormData] = useState(initialValues)
+
+  useEffect(() => {
+    setFormData(initialValues)
+  }, [initialValues])
+
+  const { data: areas = [], isLoading: areasLoading } = useAreas()
+  const { data: tiposReclamo = [], isLoading: tiposReclamoLoading } = useTipoReclamo()
+  const { mutateAsync: actualizarReclamo, isPending: isSubmitting } =
     useActualizarReclamo(reclamoId)
 
-  const { data: areas = [] } = useAreas()
+  const areasOptions = useMemo(
+    () => areas.map((area) => ({ value: area.id, label: area.nombre })),
+    [areas],
+  )
 
-  const areasOptions = areas.map(a => ({
-    label: a.nombre,
-    value: a.id,
-  }))
-  
-  const { data: tipoReclamos = [] } = useTipoReclamo()
-
-  const tipoReclamoOptions = tipoReclamos.map((a) => ({
-    label: a.nombre,
-    value: a.id,
-  }))
-
-  const reclamoResuelto = reclamo?.status === "resolved"
-
-  const [descripcion, setDescripcion] = useState("")
-  const [prioridad, setPrioridad] = useState("")
-  const [criticidad, setCriticidad] = useState("")
-  const [tipoReclamoId, setTipoReclamoId] = useState("")
-  const [areaId, setAreaId] = useState("")
-
-  // Setea los valores actuales del reclamo en el formulario
-  useEffect(() => {
-    if (reclamo) {
-      setDescripcion(reclamo.description || "")
-      setPrioridad(reclamo.priority || "")
-      setCriticidad(reclamo.criticality || "")
-      setTipoReclamoId(reclamo.type || "")
-      setAreaId(reclamo.area || "")
-    }
-  }, [reclamo])
-
-  const isFormValid = descripcion.trim().length > 0
-/**
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (estadoSeleccionado) {
-      updateEstado({ estado, descripcion })
-      return
-    }
-
-    if (areaSeleccionada) {
-      reassignArea({ areaId, descripcion })
-      return
-    }
-  }
-*/
+  const tiposReclamoOptions = useMemo(
+    () => tiposReclamo.map((tipo) => ({ value: tipo.id, label: tipo.nombre })),
+    [tiposReclamo],
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault()
+    e.preventDefault()
 
-      if (reclamoResuelto) {
-        toast.error("No se puede modificar el reclamo", {
-          description: "El reclamo ya se encuentra resuelto.",
-        })
-        return
-      }
-
-      const ok = window.confirm(
-        `¿Confirmás actualizar el reclamo?`
-      )
-      if (!ok) return
-
-      try {
-        await ({
-        descripcion,
-        prioridad,
-        criticidad,
-        tipoReclamoId,
-        areaId,
+    try {
+      await actualizarReclamo({
+        tipoReclamoId: formData.tipoReclamoId || undefined,
+        areaId: formData.areaId || undefined,
+        descripcion: formData.descripcion,
+        prioridad: formData.prioridad,
+        criticidad: formData.criticidad,
       })
-        setDescripcion("")
-        onClose()
 
-        toast.success("Reclamo actualizado correctamente", {
-          description: "El reclamo se actualizó con éxito.",
-        })
-      } catch (error) {
-        toast.error("Error al actualizar el reclamo", {
-          description: "No se pudo registrar el cambio. Intentá nuevamente.",
-        })
-        console.error("Error updating reclamo:", error)
-      }
+      toast.success("Reclamo actualizado", {
+        description: "Los cambios se guardaron correctamente.",
+      })
+    } catch (error) {
+      toast.error("Error al actualizar reclamo", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "No se pudo actualizar el reclamo. Intentá nuevamente.",
+      })
     }
+  }
 
-    console.log({reclamo})
   return (
-    <div>
-      <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-        <div className="bg-card rounded-2xl p-8 max-w-2xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-foreground mb-2">
-              Modificar reclamo
-            </h2>
-            <p className="text-muted-foreground">
-              Corregí la información del reclamo
-            </p>
-          </div>
+    <div className="bg-card rounded-xl p-6 space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-foreground">Actualizar reclamo</h3>
+        <p className="text-sm text-muted-foreground">
+          Editá los datos y guardá los cambios.
+        </p>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {reclamoResuelto && (
-              <p className="text-sm text-red-500 text-center">
-                Este reclamo ya fue resuelto y no puede modificarse.
-              </p>
-            )}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <FormSelect
+          label="Tipo de Reclamo"
+          id="tipoReclamoId"
+          value={formData.tipoReclamoId || ""}
+          onChange={(value) =>
+            setFormData((prev) => ({ ...prev, tipoReclamoId: value }))
+          }
+          options={tiposReclamoOptions}
+        />
 
-            <FormTextarea
-              label="Descripción"
-              id="descripcion"
-              value={reclamo?.description || ""}
-              onChange={setDescripcion}
-              rows={2}
-              disabled={reclamoResuelto}
-            />
+        <FormSelect
+          label="Área"
+          id="areaId"
+          value={formData.areaId || ""}
+          onChange={(value) => setFormData((prev) => ({ ...prev, areaId: value }))}
+          options={areasOptions}
+        />
 
-            <FormSelect
-              label="Prioridad"
-              id="prioridad"
-              value={prioridad}
-              onChange={setPrioridad}
-              options={MEDIDAS_OPTIONS}
-              disabled={reclamoResuelto}
-            />
+        <FormTextarea
+          label="Descripción Detallada"
+          id="descripcion"
+          value={formData.descripcion}
+          onChange={(value) => setFormData((prev) => ({ ...prev, descripcion: value }))}
+          placeholder="Describa su reclamo con el mayor detalle posible"
+          required
+          rows={4}
+        />
 
-            <FormSelect
-              label="Criticidad"
-              id="criticidad"
-              value={criticidad}
-              onChange={setCriticidad}
-              options={MEDIDAS_OPTIONS}
-              disabled={reclamoResuelto}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormRadioGroup
+            label="Prioridad"
+            name="prioridad"
+            value={formData.prioridad || ""}
+            onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                prioridad: value as "ALTA" | "MEDIA" | "BAJA",
+              }))
+            }
+            options={PRIORITY_OPTIONS}
+          />
 
-            <FormSelect
-              label="Tipo de Reclamo"
-              id="tipoReclamoId"
-              value={tipoReclamoId}
-              onChange={setTipoReclamoId}
-              options={tipoReclamoOptions}
-              disabled={reclamoResuelto}
-            />
-
-            <FormSelect
-              label="Área sugerida"
-              id="areaId"
-              value={areaId}
-              onChange={setAreaId}
-              options={areasOptions} 
-              disabled={reclamoResuelto}
-            />
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isPending}
-                className="w-full py-3 px-6 rounded-lg border border-border text-foreground hover:bg-muted transition-all disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-
-              <button
-                type="submit"
-                disabled={!isFormValid || isPending || reclamoResuelto}
-                className="w-full py-3 px-6 bg-primary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
-              >
-                {isPending ? "Guardando..." : "Guardar cambios"}
-              </button>
-            </div>
-          </form>
+          <FormRadioGroup
+            label="Criticidad"
+            name="criticidad"
+            value={formData.criticidad || ""}
+            onChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                criticidad: value as "ALTA" | "MEDIA" | "BAJA",
+              }))
+            }
+            options={CRITICALITY_OPTIONS}
+          />
         </div>
-      </Dialog>
+
+        <button
+          type="submit"
+          disabled={isSubmitting || areasLoading || tiposReclamoLoading || !formData.descripcion.trim()}
+          className="w-full py-3 px-6 bg-primary text-primary-foreground font-semibold rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting
+            ? "Guardando..."
+            : areasLoading || tiposReclamoLoading
+              ? "Cargando..."
+              : "Guardar cambios"}
+        </button>
+      </form>
     </div>
   )
 }

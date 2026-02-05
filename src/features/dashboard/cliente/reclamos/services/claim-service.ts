@@ -16,9 +16,7 @@ function transformApiClaim(apiClaim: any): Claim {
     createdAt: new Date(apiClaim.createdAt || Date.now()),
     updatedAt: new Date(apiClaim.updatedAt || Date.now()),
     userId: apiClaim.proyecto?.clienteId || "",
-    projectName: apiClaim.proyectoNombre, 
-    clientName: apiClaim.clienteNombre,
-    area: apiClaim.area,
+    projectName: apiClaim.proyecto?.nombre || "Sin proyecto",
   }
 }
 

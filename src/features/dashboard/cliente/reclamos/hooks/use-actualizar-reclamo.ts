@@ -1,34 +1,30 @@
 "use client"
 
-import { useAuthStore } from "@/stores/auth"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api"
+import { useAuthStore } from "@/stores/auth"
+
+export interface UpdateClaimPayload {
+  tipoReclamoId?: string
+  areaId?: string
+  descripcion: string
+  prioridad?: "ALTA" | "MEDIA" | "BAJA"
+  criticidad?: "ALTA" | "MEDIA" | "BAJA"
+}
 
 export function useActualizarReclamo(reclamoId: string) {
-  const token = useAuthStore(s => s.auth?.access_token)
+  const token = useAuthStore((state) => state.auth?.access_token)
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (payload: {
-      descripcion: string
-      prioridad?: string
-      criticidad?: string
-      tipoReclamoId?: string
-      areaId?: string
-    }) => {
-      if (!token) throw new Error("No hay token")
-      return api.reclamos.actualizarReclamo(reclamoId, payload, token)
+    mutationFn: async (payload: UpdateClaimPayload) => {
+      if (!token) throw new Error("No hay token de autenticación")
+      return api.reclamos.actualizar(reclamoId, payload, token)
     },
-
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["reclamo", reclamoId],
-        refetchType: "active",
-      })
-
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["claims"] })
-      queryClient.invalidateQueries({ queryKey: ["claims", "area"] })
-      queryClient.invalidateQueries({ queryKey: ["cambios-estado", reclamoId] })
+      queryClient.invalidateQueries({ queryKey: ["reclamo", reclamoId] })
+      queryClient.invalidateQueries({ queryKey: ["cambio-estado", reclamoId] })
     },
   })
 }

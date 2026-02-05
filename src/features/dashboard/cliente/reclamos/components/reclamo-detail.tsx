@@ -3,10 +3,8 @@
 import { formatDateTime } from "@/helpers/format"
 import { STATUS_LABELS } from "../constants/claim-options"
 import { useCambioEstado } from "../hooks/use-cambio-estado"
+import { useReclamoDetail } from "../hooks/use-reclamo-detail"
 import { ActualizarReclamoForm } from "./actualizar-reclamo-form"
-import { useClaimDetail } from "../hooks/use-claim-detail"
-import { useClaim } from "../hooks/use-claim"
-import { useState } from "react"
 
 interface ReclamoDetailProps {
   reclamoId: string
@@ -31,13 +29,14 @@ export function ReclamoDetail({ reclamoId }: ReclamoDetailProps) {
     data: reclamo,
     isLoading: reclamoLoading,
     error: reclamoError,
-  } = useClaim(reclamoId)
+  } = useReclamoDetail(reclamoId)
   const {
     data: cambiosEstado = [],
     isLoading: cambiosLoading,
     error: cambiosError,
   } = useCambioEstado(reclamoId)
 
+  const currentCambioEstado = cambiosEstado.find((cambio) => !cambio.fechaFin) || cambiosEstado[0]
 
   if (reclamoLoading) {
     return (
@@ -56,23 +55,17 @@ export function ReclamoDetail({ reclamoId }: ReclamoDetailProps) {
       </div>
     )
   }
-
+  
   return (
     <div className="space-y-8">
       {/* Reclamo Information */}
       <div className="bg-card rounded-xl p-6 space-y-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-semibold text-foreground mb-2">
-              {reclamo.title}
-            </h2>
-            <p className="text-xs text-muted-foreground font-mono mb-4">
-              ID: {reclamo.id}
-            </p>
-            <p className="text-xs text-muted-foreground font-mono mb-4">
+            <p className="text-muted-foreground">{reclamo.description}</p>
+            <p className="text-sm text-muted-foreground mt-2">
               Proyecto: {reclamo.projectName}
             </p>
-            <p className="text-muted-foreground">{reclamo.description}</p>
           </div>
           <span
             className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${STATUS_COLORS[reclamo.status]}`}
@@ -107,21 +100,19 @@ export function ReclamoDetail({ reclamoId }: ReclamoDetailProps) {
           </span>
         </div>
       </div>
-      
-      <div className="flex flex-wrap gap-3 justify-start">
-        <button
-          onClick={() => setOpenActualizar(true)}
-          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-muted transition-all"
-        >
-          Modificar Reclamo
-        </button>
-      </div>
 
-      <ActualizarReclamoForm
-        open={openActualizar}
-        onClose={() => setOpenActualizar(false)}
-        reclamoId={reclamo.id}
-      />
+      {reclamo.status !== "resolved" && (
+        <ActualizarReclamoForm
+          reclamoId={reclamoId}
+          initialValues={{
+            tipoReclamoId: reclamo.type,
+            areaId: reclamo.areaId || currentCambioEstado?.area?.id,
+            descripcion: reclamo.description,
+            prioridad: reclamo.priority,
+            criticidad: reclamo.criticality,
+          }}
+        />
+      )}
 
       {/* State Change History */}
       <div className="space-y-4">
@@ -189,6 +180,8 @@ export function ReclamoDetail({ reclamoId }: ReclamoDetailProps) {
                       {cambio.fechaFin && (
                         <p>Fin: {formatDateTime(new Date(cambio.fechaFin))}</p>
                       )}
+                      <p>Área: {cambio.area?.nombre || "Sin área"}</p>
+                      <p>Usuario: {cambio.usuario?.nombre || "Sin usuario"}</p>
                     </div>
                   </div>
                 </div>

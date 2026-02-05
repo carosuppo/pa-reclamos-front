@@ -27,10 +27,6 @@ export function ClaimCard({ claim, showClient = true }: ClaimCardProps) {
   return (
     <div className="bg-card rounded-xl p-6 space-y-4">
       <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-foreground">{claim.title}</h3>
-          <p className="text-xs text-muted-foreground font-mono">ID: {claim.id}</p>
-        </div>
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[claim.status]}`}>
           {STATUS_LABELS[claim.status]}
         </span>
@@ -41,7 +37,7 @@ export function ClaimCard({ claim, showClient = true }: ClaimCardProps) {
       </p>
       {showClient && (
         <p className="text-xs text-muted-foreground">
-          Cliente: {claim.clientName}
+          Cliente: {claim.userId}
         </p>
       )}
 

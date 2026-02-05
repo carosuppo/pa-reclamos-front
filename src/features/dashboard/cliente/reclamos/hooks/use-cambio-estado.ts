@@ -7,13 +7,19 @@ import { useAuthStore } from "@/stores/auth"
 export interface CambioEstado {
   id: string
   reclamoId: string
-  areaId: string
   fechaInicio: string
   fechaFin: string | null
   descripcion: string
   estado: string
-  empleadoId: string | null
-  clienteId: string
+  area?: {
+    id: string
+    nombre: string
+  }
+  usuario?: {
+    id: string
+    nombre: string
+    email?: string
+  }
 }
 
 export function useCambioEstado(reclamoId: string) {
