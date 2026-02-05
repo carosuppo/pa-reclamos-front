@@ -1,7 +1,7 @@
 export type ClaimType = "product_failure" | "service_question" | "incident"
 export type Priority = "ALTA" | "MEDIA" | "BAJA"
 export type Criticality = "ALTA" | "MEDIA" | "BAJA"
-export type ClaimStatus = "pending" | "in_progress" | "resolved" | "rejected"
+export type ClaimStatus = "pending" | "in_progress" | "resolved"
 
 export interface Claim {
   id: string
@@ -17,6 +17,7 @@ export interface Claim {
   userId: string
   projectName: string
   clientName: string
+  area: string
 }
 
 export interface CreateClaimPayload {

@@ -1,4 +1,4 @@
-import { useAreaClaims } from "../hooks/use-area-reclamo"
+import { useAreaClaims } from "../../cliente/reclamos/hooks/use-area-reclamo"
 import { ClaimCard } from "./claim-card"
 
 export function ListaReclamosArea() {

@@ -1,6 +1,6 @@
 import Link from "next/link"
-import type { Claim } from "../types/claim"
-import { STATUS_LABELS } from "../constants/claim-options"
+import type { Claim } from "../../cliente/reclamos/types/claim"
+import { STATUS_LABELS } from "../../cliente/reclamos/constants/claim-options"
 import { formatDate } from "@/helpers/format"
 import { Route } from "next"
 
@@ -22,7 +22,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 }
 
 export function ClaimCard({ claim, showClient = true }: ClaimCardProps) {
-  const href = `/cliente/reclamos/${claim.id}` as Route
+  const href = `/empleado/reclamos/${claim.id}` as Route
 
   return (
     <div className="bg-card rounded-xl p-6 space-y-4">

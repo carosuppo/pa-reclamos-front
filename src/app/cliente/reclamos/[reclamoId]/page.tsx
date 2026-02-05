@@ -1,4 +1,4 @@
-import { ReclamoDetail } from "@/features/dashboard/empleado/components/reclamo-detail"
+import { ReclamoDetail } from "@/features/dashboard/cliente/reclamos/components/reclamo-detail"
 
 interface ReclamoDetailPageProps {
   params: Promise <{ 

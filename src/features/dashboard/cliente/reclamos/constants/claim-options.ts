@@ -20,5 +20,4 @@ export const STATUS_LABELS: Record<string, string> = {
   pending: "Pendiente",
   in_progress: "En Proceso",
   resolved: "Resuelto",
-  rejected: "Rechazado",
 }

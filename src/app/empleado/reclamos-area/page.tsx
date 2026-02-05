@@ -1,6 +1,6 @@
 "use client";
 
-import { ListaReclamosArea } from "@/features/dashboard/cliente/reclamos/components/lista-reclamos-area";
+import { ListaReclamosArea } from "@/features/dashboard/empleado/components/lista-reclamos-area";
 
 export default function ClaimsPage() {
   return (

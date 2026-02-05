@@ -9,7 +9,7 @@
  * pero para el deadline esta capa única es suficiente y limpia.
  */
 
-const BASE_URL = "http://localhost:3001"
+const BASE_URL = "http://localhost:3000"
 
 if (!BASE_URL) {
   // En desarrollo es útil ver esto si la env var no está configurada.
@@ -192,8 +192,8 @@ export const api = {
         token,
       }),
     
-    updateEstado(id: string, data: any, token: string) {
-      return fetch(`${BASE_URL}/reclamo/update-estado/${id}`, {
+    actualizarEstado(id: string, data: { estado: string; descripcion: string }, token: string) {
+      return fetch(`${BASE_URL}/reclamo/change-estado/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -203,7 +203,7 @@ export const api = {
       }).then(r => r.json())
       },
 
-    reassignArea(id: string, data: any, token: string) {
+    reasignarArea(id: string, data: any, token: string) {
       return fetch(`${BASE_URL}/reclamo/reassign-area/${id}`, {
         method: "PUT",
         headers: {
@@ -214,6 +214,7 @@ export const api = {
       }).then(r => r.json())
     },
 
+    //no existe este endpoint en el backend
     obtenerPorId(id: string, token: string) {
       return fetch(`${BASE_URL}/reclamo/${id}`, {
         method: "GET",
@@ -222,8 +223,6 @@ export const api = {
           Authorization: `Bearer ${token}`,
         },
       }).then(r => r.json())
-    },
-
     },
 
     filtros: (
@@ -261,38 +260,21 @@ export const api = {
         token,
       }),
 
-    actualizarEstado: (
+    actualizarReclamo: (
       id: string,
       data: Record<string, unknown>,
       token: string,
-    ) =>
-      request(`/reclamo/update-estado/${id}`, {
-        method: "PUT",
-        body: data,
-        token,
-      }),
-
-    reasignarArea: (
-      id: string,
-      data: Record<string, unknown>,
-      token: string,
-    ) =>
-      request(`/reclamo/reassign-area/${id}`, {
-        method: "PUT",
-        body: data,
-        token,
-      }),
-
-    actualizar: (
-      id: string,
-      data: Record<string, unknown>,
-      token: string,
-    ) =>
-      request(`/reclamo/${id}`, {
-        method: "PUT",
-        body: data,
-        token,
-      }),
+    ) => {
+      return fetch(`${BASE_URL}/reclamo/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      }).then(r => r.json())
+    },
+  },
 
   // ------------------------------------------
   // TIPO RECLAMO

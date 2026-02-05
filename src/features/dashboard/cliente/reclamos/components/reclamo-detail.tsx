@@ -3,9 +3,10 @@
 import { formatDateTime } from "@/helpers/format"
 import { STATUS_LABELS } from "../constants/claim-options"
 import { useCambioEstado } from "../hooks/use-cambio-estado"
-import { UpdateEstadoYAreaForm } from "./actualizar-reclamo-form"
+import { ActualizarReclamoForm } from "./actualizar-reclamo-form"
 import { useClaimDetail } from "../hooks/use-claim-detail"
 import { useClaim } from "../hooks/use-claim"
+import { useState } from "react"
 
 interface ReclamoDetailProps {
   reclamoId: string
@@ -15,7 +16,6 @@ const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-500/20 text-yellow-400",
   in_progress: "bg-blue-500/20 text-blue-400",
   resolved: "bg-green-500/20 text-green-400",
-  rejected: "bg-red-500/20 text-red-400",
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -25,6 +25,8 @@ const PRIORITY_COLORS: Record<string, string> = {
 }
 
 export function ReclamoDetail({ reclamoId }: ReclamoDetailProps) {
+  const [openActualizar, setOpenActualizar] = useState(false)
+  
   const {
     data: reclamo,
     isLoading: reclamoLoading,
@@ -106,7 +108,20 @@ export function ReclamoDetail({ reclamoId }: ReclamoDetailProps) {
         </div>
       </div>
       
-      <UpdateEstadoYAreaForm reclamoId={reclamoId} />
+      <div className="flex flex-wrap gap-3 justify-start">
+        <button
+          onClick={() => setOpenActualizar(true)}
+          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-muted transition-all"
+        >
+          Modificar Reclamo
+        </button>
+      </div>
+
+      <ActualizarReclamoForm
+        open={openActualizar}
+        onClose={() => setOpenActualizar(false)}
+        reclamoId={reclamo.id}
+      />
 
       {/* State Change History */}
       <div className="space-y-4">

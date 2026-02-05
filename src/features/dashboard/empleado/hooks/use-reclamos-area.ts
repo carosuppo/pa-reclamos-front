@@ -26,7 +26,7 @@ export function useReclamosArea() {
     enabled: !!token,
     queryFn: () => {
       if (!token) throw new Error("No token")
-      return api.reclamos.reclamosDelArea(token) as Promise<Reclamos[]>
+      return api.reclamos.listarPorArea(token) as Promise<Reclamos[]>
     },
   })
 }

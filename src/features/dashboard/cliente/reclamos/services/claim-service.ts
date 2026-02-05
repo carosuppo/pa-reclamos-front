@@ -1,5 +1,6 @@
 import { api } from "@/lib/api"
 import type { Claim, CreateClaimPayload } from "../types/claim"
+import { useReclamoDetail } from "../hooks/use-reclamo-detail"
 
 // Transform API response to match our Claim interface
 function transformApiClaim(apiClaim: any): Claim {
@@ -17,6 +18,7 @@ function transformApiClaim(apiClaim: any): Claim {
     userId: apiClaim.proyecto?.clienteId || "",
     projectName: apiClaim.proyectoNombre, 
     clientName: apiClaim.clienteNombre,
+    area: apiClaim.area,
   }
 }
 
@@ -106,7 +108,7 @@ export const claimService = {
     payload: { estado: string; descripcion: string },
     token: string,
   ) {
-    return api.reclamos.updateEstado(reclamoId, payload, token)
+    return api.reclamos.actualizarEstado(reclamoId, payload, token)
   },
 
   async reassignArea(
@@ -114,11 +116,17 @@ export const claimService = {
     payload: { areaId: string; descripcion: string },
     token: string,
   ) {
-    return api.reclamos.reassignArea(reclamoId, payload, token)
+    return api.reclamos.reasignarArea(reclamoId, payload, token)
   },
 
+  /**
   async getClaimById(id: string, token: string): Promise<Claim> {
     const response = await api.reclamos.obtenerPorId(id, token)
+    return transformApiClaim(response)
+    */
+
+    async getClaimById(id: string, token: string): Promise<Claim> {
+    const response = await useReclamoDetail(id)
     return transformApiClaim(response)
   }
 }
